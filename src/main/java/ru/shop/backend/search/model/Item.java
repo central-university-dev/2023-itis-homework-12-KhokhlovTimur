@@ -8,6 +8,7 @@ import javax.persistence.Id;
 
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode
 @ToString
 @Getter
 @Setter

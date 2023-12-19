@@ -7,7 +7,7 @@ import ru.shop.backend.search.model.ItemEntity;
 import java.util.List;
 import java.util.stream.Stream;
 
-public interface ItemDbRepository  extends JpaRepository<ItemEntity, Long> {
+public interface ItemJpaRepository extends JpaRepository<ItemEntity, Long> {
     @Query(value = "select i.item_id, i.name, r.price, i.itemurl as url, i as image ,\n" +
             " i.type from item as i\n" +
             "join remain as r on r.item_id = i.item_id and r.region_id = :regionId\n" +

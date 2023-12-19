@@ -16,5 +16,4 @@ public class CatalogueElastic {
     private Long catalogueId;
     private List<ItemElastic> items;
     private String brand;
-
 }

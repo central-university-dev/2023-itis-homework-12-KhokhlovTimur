@@ -8,7 +8,7 @@ import ru.shop.backend.search.model.ItemElastic;
 
 import java.util.List;
 
-public interface ItemRepository extends ElasticsearchRepository<ItemElastic, Integer> {
+public interface ItemElasticRepository extends ElasticsearchRepository<ItemElastic, Long> {
 
 
     @Query("{\n" +
@@ -21,7 +21,7 @@ public interface ItemRepository extends ElasticsearchRepository<ItemElastic, Int
             "       \"analyzer\" : \"russian\"\n" +
             "      }\n" +
             "    }\n")
-    List<ItemElastic> find(String name, Pageable pageable);
+    List<ItemElastic> findByCatalogueId(String name, Pageable pageable);
 
     @Query("{\"match\": {\n" +
             "      \"type\": {\n" +
@@ -29,7 +29,7 @@ public interface ItemRepository extends ElasticsearchRepository<ItemElastic, Int
             "        \"fuzziness\": \"2\"\n" +
             "      }\n" +
             "    }}")
-    List<ItemElastic> findAllByType(String name, Pageable pageable);
+    List<ItemElastic> findAllByType(String type, Pageable pageable);
 
     @Query("{\"match\": {\n" +
             "      \"brand\": {\n" +
@@ -50,7 +50,7 @@ public interface ItemRepository extends ElasticsearchRepository<ItemElastic, Int
             "        \"boost\": \"1\",\n" +
             "       \"analyzer\" : \"russian\",\n" +
             "\"operator\":   \"AND\" ,\n" +
-            "          \"fields\": [\n" +"\"name^4\", \"description\", \"type\"\n" +
+            "          \"fields\": [\n" + "\"name^4\", \"description\", \"type\"\n" +
             "          ]\n" +
             "        }\n" +
             "      }    ],\n" +
@@ -64,12 +64,12 @@ public interface ItemRepository extends ElasticsearchRepository<ItemElastic, Int
             "}")
     List<ItemElastic> findAllByBrand(String text, String brand, Pageable pageable);
 
-@Query("{\"match\": {\n" +
-        "      \"fulltext\": {\n" +
-        "        \"query\": \"?0\",\n" +
-        "        \"fuzziness\": \"2\"\n" +
-        "      }\n" +
-        "    }}")
+    @Query("{\"match\": {\n" +
+            "      \"fulltext\": {\n" +
+            "        \"query\": \"?0\",\n" +
+            "        \"fuzziness\": \"2\"\n" +
+            "      }\n" +
+            "    }}")
     List<ItemElastic> findAllNotStrong(String text, Pageable pageable);
 
     @Query("{\"match\": {\n" +
@@ -91,19 +91,20 @@ public interface ItemRepository extends ElasticsearchRepository<ItemElastic, Int
             "        \"boost\": \"1\",\n" +
             "       \"analyzer\" : \"russian\",\n" +
             "\"operator\":   \"AND\" ,\n" +
-            "          \"fields\": [\n" +"\"name^4\", \"description\", \"type\"\n" +
+            "          \"fields\": [\n" + "\"name^4\", \"description\", \"type\"\n" +
             "          ]\n" +
             "        }\n" +
             "      }    ],\n" +
             "      \n" +
-            "      \"filter\":  [{\"match\":{\n" +
+            "      \"filter\":  [{\"wildcard\":{\n" +
             "                    \"type\": \n" +
             "                        \"?1\"}\n" +
             "                    }]\n" +
             "    }\n" +
             "}")
-
     List<ItemElastic> findAllByType(String text, String type, Pageable pageable);
+
+    //Никак не проверялся type, '?' не работает с match - поменял на wildcard
     @Query("{\n" +
             "\"bool\": { \n" +
             "      \"must\": [\n" +
@@ -114,17 +115,24 @@ public interface ItemRepository extends ElasticsearchRepository<ItemElastic, Int
             "        \"boost\": \"1\",\n" +
             "       \"analyzer\" : \"russian\",\n" +
             "\"operator\":   \"AND\" ,\n" +
-            "          \"fields\": [\n" +"\"name^4\", \"description\", \"type\"\n" +
+            "          \"fields\": [\n" + "\"name^4\", \"description\", \"type\"\n" +
             "          ]\n" +
             "        }\n" +
             "      }    ],\n" +
             "      \n" +
-            "      \"filter\":  [{\"match\":{\n" +
-            "                    \"brand\": \n" +
-            "                        \"?1\"}\n" +
-            "                    }]\n" +
-            "    }\n" +
-            "}")
+            "  \"filter\": [" +
+            "    {" +
+            "      \"match\": {" +
+            "        \"brand\": \"?1\"" +
+            "      }" +
+            "    }," +
+            "    {" +
+            "      \"match\": {" +
+            "        \"type\": \"?2\"" +
+            "      }" +
+            "    }" +
+            "  ]" +
+            "}}")
     List<ItemElastic> findAllByTypeAndBrand(String text, String brand, String type, Pageable pageable);
 
     @Query("{\n" +
@@ -134,7 +142,9 @@ public interface ItemRepository extends ElasticsearchRepository<ItemElastic, Int
             "      \"type\": {\n" +
             "        \"query\": \"?0\",\n" +
             "        \"fuzziness\": \"2\",\n" +
-            "        \"boost\": \"1\"\n" +
+            "        \"boost\": \"1\",\n" +
+            "       \"analyzer\" : \"russian\",\n" +
+            "\"operator\":   \"AND\" \n" +
             "      }\n" +
             "    }}  ],\n" +
             "      \n" +
@@ -144,7 +154,8 @@ public interface ItemRepository extends ElasticsearchRepository<ItemElastic, Int
             "                    }]\n" +
             "    }\n" +
             "}")
-    List<ItemElastic> find(String text, Long catalogueId, Pageable pageable);
+    List<ItemElastic> findByCatalogueId(String text, Long catalogueId, Pageable pageable);
+
     @Query("{\n" +
             "\"bool\": { \n" +
             "      \"must\": [\n" +
@@ -164,11 +175,12 @@ public interface ItemRepository extends ElasticsearchRepository<ItemElastic, Int
             "                    }]\n" +
             "    }\n" +
             "}")
-    List<ItemElastic> find(String text, Long catalogueId, String type, Pageable pageable);
+    List<ItemElastic> findByCatalogueId(String text, Long catalogueId, String type, Pageable pageable);
+
     @Query("{\"term\": {\n" +
             "      \"item_id\":  \"?0\"\n" +
             "    }}")
-    List<ItemElastic> findByItemId(String itemId, PageRequest of);
+    List<ItemElastic> findByItemId(Long itemId, PageRequest of);
 
     @Query("{\"regexp\": {\n" +
             "      \"name\": \"?0\" }}")
