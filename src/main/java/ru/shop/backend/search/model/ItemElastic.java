@@ -24,22 +24,29 @@ import java.util.stream.Collectors;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ItemElastic {
+
     @Field(type = FieldType.Text)
     private String name;
+
     @Field(type = FieldType.Text)
     @JsonIgnore
     private String fulltext;
+
     @Id
-    @Field(name = "item_id", type = FieldType.Integer)
+    @Field(name = "item_id", type = FieldType.Long)
     private Long itemId;
-    @Field(name = "catalogue_id", type = FieldType.Integer)
+
+    @Field(name = "catalogue_id", type = FieldType.Long)
     @JsonIgnore
     private Long catalogueId;
+
     @Field(type = FieldType.Text)
     @JsonIgnore
     private String catalogue;
+
     @Field(type = FieldType.Text)
     private String brand;
+
     @Field(type = FieldType.Text)
     private String type;
 
@@ -48,28 +55,30 @@ public class ItemElastic {
 
     public ItemElastic(ItemEntity entity) {
         this.description = buildDescription(entity.getDescription());
-        this.fulltext = entity.getCatalogue()+ " " + entity.getType() + " " + entity.getName() + " " + description;
-        this.name = entity.getName().replace(entity.getBrand(),"").trim();
+
+        this.fulltext = String.format("%s %s %s %s",
+                entity.getCatalogue(),
+                entity.getType(),
+                entity.getName(),
+                description);
+
+        this.name = entity.getName().replace(entity.getBrand(), "").trim();
         this.itemId = entity.getItemId();
         this.catalogueId = entity.getCatalogueId();
         this.catalogue = entity.getCatalogue();
         this.brand = entity.getBrand();
         this.type = entity.getType();
     }
-    public String buildDescription(String description){
-        return Arrays.stream(description.split(";")).map(
-                d -> {
-                    d = d.toLowerCase(Locale.ROOT);
-                    if(d.contains(": нет"))
-                        return null;
-                    if(d.contains(": -"))
-                        return null;
-                    if(d.contains(": есть"))
-                        return d.replace(": есть", "");
-                    if(d.contains(": 0 "))
-                        return null;
-                    return d.replace(":","");
-                }
-        ).filter( d -> d != null).collect(Collectors.joining());
+
+    public String buildDescription(String description) {
+        return Arrays.stream(description.split(";"))
+                .map(d -> d.toLowerCase(Locale.ROOT))
+                .filter(d -> !d.contains(": нет")
+                        && !d.contains(": -")
+                        && !d.contains(": 0 "))
+                .map(d -> d.contains(": есть") ?
+                        d.replace(": есть", "")
+                        : d.replace(":", ""))
+                .collect(Collectors.joining());
     }
 }
