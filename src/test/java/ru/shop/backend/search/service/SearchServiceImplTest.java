@@ -115,7 +115,7 @@ class SearchServiceImplTest {
 
         verify(itemElasticRepository)
                 .findAllByName(
-                        argThat(arg -> Objects.equals(arg, ".*" + itemElastic1.getName() + ".*")),
+                        argThat(arg -> Objects.equals(arg, itemElastic1.getName() + ".*")),
                         any(Pageable.class));
     }
 
@@ -670,7 +670,7 @@ class SearchServiceImplTest {
 
         verify(itemElasticRepository)
                 .findAllByName(
-                        argThat(arg -> arg.equals(".*" + query + ".*")),
+                        argThat(arg -> arg.equals(query + ".*")),
                         any()
                 );
     }

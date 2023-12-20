@@ -53,7 +53,7 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public List<CatalogueElastic> getByItemName(String name) {
-        List<ItemElastic> items = itemElasticRepository.findAllByName(".*" + name + ".*", pageable);
+        List<ItemElastic> items = itemElasticRepository.findAllByName(name + ".*", pageable);
         return getCatalogues(items, name, "");
     }
 
@@ -304,7 +304,7 @@ public class SearchServiceImpl implements SearchService {
                 if (!items.isEmpty()) {
                     text = text.replace(queryWord, "")
                             .trim()
-                            .replace("  ", " ");
+                            .replace("\\s+", " ");
                     brand = items.get(0)
                             .getBrand();
                     searchRequest.setBrand(brand);
